@@ -1,107 +1,54 @@
 ---
 name: ab-experiment-measurement
 description: |
-  Week-based A/B experiment measurement framework for social media content.
-  Tracks variants, measures performance, and provides statistical analysis for content optimization.
+  Designs and measures week-based A/B experiments for social media content,
+  computing composite performance scores and statistical significance.
 allowed-tools: Read, Write, Bash, Grep
 ---
 
 # A/B Experiment Measurement
 
-Week-based experimentation framework for optimizing social media content performance.
+## Experiment design
 
-## Experiment Design
+Define each experiment to test exactly ONE variable (hook type, duration, style, posting time, CTA type, or audio). Assign two variants: A (control) and B (treatment).
 
-### Variant Definition
-Each experiment tests exactly ONE variable:
-- **Hook type**: Question vs statement vs demo-first
-- **Duration**: 15s vs 30s vs 45s vs 60s
-- **Style**: Avatar vs screen recording vs text overlay
-- **Posting time**: Morning vs midday vs evening
-- **CTA type**: Follow vs try-it vs comment
-- **Audio**: Trending sound vs original vs voiceover only
+Follow the weekly schedule:
+- Mon/Wed: deploy Variant A
+- Tue/Thu: deploy Variant B
+- Fri: collect and analyze results
+- Sat: generate report and plan next week
 
-### Weekly Experiment Structure
-```
-Monday:    Deploy Variant A on all platforms
-Tuesday:   Deploy Variant B on all platforms
-Wednesday: Deploy Variant A (replication)
-Thursday:  Deploy Variant B (replication)
-Friday:    Collect and analyze results
-Saturday:  Generate report and plan next week
-Sunday:    Rest / content backlog production
-```
+## Metric collection
 
-## Measurement Framework
+Collect per-platform raw metrics: views, completions, likes, comments, shares, new followers, link clicks. Derive rates from these (see `references/metrics-and-scoring.md` for formulas and weights).
 
-### Primary Metrics (per platform)
-| Metric | Weight | Source |
-|--------|--------|--------|
-| View completion rate | 0.30 | Platform analytics |
-| Engagement rate | 0.25 | (likes + comments + shares) / views |
-| Share rate | 0.20 | shares / views |
-| Follower conversion | 0.15 | new followers / views |
-| Click-through rate | 0.10 | link clicks / views |
+## Composite scoring
 
-### Composite Score
-```
-score = (completion * 0.30) + (engagement * 0.25) + (share_rate * 0.20) + (follower_conv * 0.15) + (ctr * 0.10)
-```
+Calculate the weighted composite score for each variant. Refer to `references/metrics-and-scoring.md` for the full weight table and formula.
 
-### Statistical Significance
-- Minimum sample: 200 views per variant before analysis
-- Confidence level: 95% (z = 1.96)
-- Use two-proportion z-test for rate comparisons
-- Report effect size (Cohen's h) alongside p-value
+## Statistical analysis
 
-## Experiment Pydantic Model
+Run a two-proportion z-test comparing variant rates. Require a minimum of 200 views per variant before analysis. Use 95% confidence (z = 1.96). Report p-value and effect size (Cohen's h). Declare significance only when p < 0.05.
 
-Experiments are tracked using version-controlled Pydantic models (see `models/` directory):
-
-```python
-class Experiment:
-    experiment_id: str          # UUID
-    week_number: int            # ISO week
-    hypothesis: str             # What we expect to learn
-    variable: str               # What we're testing
-    variant_a: VariantConfig    # Control
-    variant_b: VariantConfig    # Treatment
-    platforms: list[Platform]   # Where to deploy
-    status: ExperimentStatus    # planned | running | completed | archived
-    results: ExperimentResults  # Populated after analysis
-```
+See `references/metrics-and-scoring.md` for the z-test procedure.
 
 ## Reporting
 
-### Weekly Report Template
-```markdown
-## Week {N} Experiment Report
+Generate a weekly report containing:
+1. Hypothesis and variable tested
+2. Per-platform results table (variant scores, winner, p-value, effect size)
+3. Statistical interpretation and conclusion
+4. Recommended action based on results
+5. Next experiment hypothesis
 
-### Hypothesis
-{hypothesis}
+## Experiment backlog
 
-### Variable Tested
-{variable}: {variant_a.label} vs {variant_b.label}
+Maintain a prioritized queue of experiments. Suggested order:
+1. Hook type optimization
+2. Optimal video duration
+3. Posting time optimization
+4. Visual style testing
+5. CTA effectiveness
+6. Platform-specific optimization
 
-### Results
-| Platform | Variant A Score | Variant B Score | Winner | p-value | Effect Size |
-|----------|----------------|----------------|--------|---------|-------------|
-
-### Conclusion
-{statistical interpretation}
-
-### Action
-{what changes to make based on results}
-
-### Next Experiment
-{what to test next week}
-```
-
-## Experiment Backlog
-Maintain a prioritized backlog of experiments:
-1. Hook type optimization (Week 1-2)
-2. Optimal video duration (Week 3-4)
-3. Posting time optimization (Week 5-6)
-4. Visual style testing (Week 7-8)
-5. CTA effectiveness (Week 9-10)
-6. Platform-specific optimization (Week 11-12)
+Validate all experiment definitions against the schema in `run-experiment/references/experiment-schemas.md`.
