@@ -1,36 +1,33 @@
 ---
 name: upload-content
 description: >
-  Upload generated video content to social media platforms (TikTok, Instagram, YouTube).
-  Use when users want to publish videos, upload content, schedule posts,
-  or distribute content across social platforms.
+  Uploads generated video content to social media platforms (TikTok, Instagram, YouTube).
+  Routes to the appropriate platform integration skill based on requirement spec,
+  validates content against platform constraints, and records publish IDs for analytics.
 ---
 
 # Upload Content to Social Platforms
 
-Upload video content to TikTok, Instagram, and YouTube using platform-specific APIs.
+## Workflow
 
-## Steps
-
-1. Read requirement from `requirements/accepted/` with upload spec
-2. Validate video meets platform-specific requirements
-3. Route to appropriate integration skill:
-   - TikTok: `tiktok-integration` (Content Posting API v2)
-   - Instagram: `instagram-integration` (Graph API v19.0, Reels)
-   - YouTube: `youtube-integration` (Data API v3, Shorts)
-4. Execute platform upload flow
-5. Record publish IDs for analytics tracking
-6. Update requirement status to completed
+1. Read the requirement from `requirements/accepted/` containing the upload spec
+2. Validate the video meets platform-specific constraints
+   (see `references/platform-specs.md` for format, resolution, duration, and size limits)
+3. Route to the appropriate integration skill:
+   - TikTok: invoke `tiktok-integration` (Content Posting API v2)
+   - Instagram: invoke `instagram-integration` (Graph API v19.0, Reels)
+   - YouTube: invoke `youtube-integration` (Data API v3, Shorts)
+4. Execute the platform upload flow via the selected integration skill
+5. Record the returned publish ID for downstream analytics tracking
+6. Update the requirement status to `completed` and write the result to `requirements/completed/`
 
 ## Arguments
 
-- Requirement ID or path to requirement YAML file
-- Platform override (optional): tiktok, instagram, youtube
+- **Requirement ID** -- path or ID for the requirement YAML file in `requirements/accepted/`
+- **Platform override** (optional) -- force a specific platform: `tiktok`, `instagram`, or `youtube`
 
-## Platform Requirements
+## Error Handling
 
-| Platform | Format | Resolution | Duration | Max Size |
-|----------|--------|-----------|----------|----------|
-| TikTok | MP4/WebM | 1080x1920 | 15-60s | 4GB |
-| Instagram | MP4/MOV | 1080x1920 | 3-90s | 1GB |
-| YouTube | MP4 | 1080x1920 | Up to 60s | 100MB |
+- If validation fails, reject the requirement with a descriptive error and leave it in `requirements/accepted/`
+- If the platform upload fails, retry once; on second failure mark the requirement as `errored` with the platform error response
+- If rate limits are hit, log the reset time and defer the upload
