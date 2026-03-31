@@ -1,80 +1,71 @@
 # Report Templates
 
-Prompt templates for generating reports via Anthropic API Skills.
+## Campaign Performance Report
 
-## Weekly Experiment Report (Excel)
+### Sections
+1. **Executive Summary** -- Key metrics snapshot, top/bottom performers, budget status.
+2. **Overall Performance** -- Aggregate impressions, clicks, conversions, spend, ROAS.
+3. **Campaign Breakdown** -- Per-campaign table with all core metrics.
+4. **Trend Analysis** -- Period-over-period charts (daily/weekly/monthly).
+5. **Channel Mix** -- Spend and performance distribution across channels.
+6. **Recommended Actions** -- Optimization suggestions based on data.
 
-```
-Create an A/B experiment tracking spreadsheet with:
+### KPI table columns
+Campaign Name | Impressions | Clicks | CTR | Conversions | Conv. Rate | Spend | CPC | ROAS
 
-Sheet 1: Experiment Overview
-- Experiment ID, week number, hypothesis, variable, status
+---
 
-Sheet 2: Variant A Metrics
-| Platform | Views | Completions | Likes | Comments | Shares | Completion Rate | Engagement Rate | Composite Score |
+## Audience Segmentation Report
 
-Sheet 3: Variant B Metrics
-(same columns as Variant A)
+### Sections
+1. **Executive Summary** -- Segment count, largest/smallest segments, key behavioral patterns.
+2. **Segment Overview** -- Table of all segments with size, growth rate, and conversion rate.
+3. **Segment Deep-Dives** -- One subsection per top segment with demographics and behavior.
+4. **Overlap Analysis** -- Cross-segment overlap matrix.
+5. **Recommended Actions** -- Targeting and messaging recommendations per segment.
 
-Sheet 4: Statistical Analysis
-- p-value, effect size (Cohen's h), significance, winner
+### KPI table columns
+Segment Name | Size | % of Total | Growth (MoM) | Conv. Rate | Avg. Order Value | LTV
 
-Include conditional formatting (green for winner), column charts, and summary formulas.
-```
+---
 
-## Content Calendar (Excel)
+## A/B Test Results Report
 
-```
-Create a 7-day content calendar spreadsheet:
+### Sections
+1. **Executive Summary** -- Winner declaration, lift percentage, confidence level.
+2. **Test Configuration** -- Hypothesis, variants, sample size, duration, success metric.
+3. **Results Summary** -- Side-by-side variant metrics table.
+4. **Statistical Analysis** -- Confidence intervals, p-values, power analysis.
+5. **Segment Cuts** -- Performance by audience segment, device, geography.
+6. **Recommended Actions** -- Roll out, iterate, or discard recommendation with rationale.
 
-Columns: Day | Platform | Content Pillar | Headline | Hook | Duration (s) | Posting Time | Status
+### KPI table columns
+Variant | Impressions | Conversions | Conv. Rate | Lift vs. Control | Confidence | Revenue/User
 
-Include:
-- Color-coded platforms (TikTok=pink, Instagram=purple, YouTube=red)
-- Data validation dropdowns for Status (Draft, Ready, Published, Scheduled)
-- Summary row with post counts per platform
-```
+---
 
-## Strategy Deck (PowerPoint)
+## Attribution Report
 
-```
-Create a content strategy presentation:
+### Sections
+1. **Executive Summary** -- Top contributing channels, model comparison highlights.
+2. **Channel Performance** -- Per-channel table with attributed conversions and spend.
+3. **Model Comparison** -- Last-touch vs. multi-touch vs. data-driven attribution side-by-side.
+4. **Path Analysis** -- Most common conversion paths and average path length.
+5. **Recommended Actions** -- Budget reallocation suggestions based on attribution insights.
 
-Slide 1: Title - "Social Media Content Report - Week {N}"
-Slide 2: Performance Summary - Column chart of views by platform
-Slide 3: A/B Experiment Results - Bar chart comparing variant scores
-Slide 4: Next Week Plan - Content themes and next experiment hypothesis
+### KPI table columns
+Channel | Touchpoints | Last-Touch Conv. | Multi-Touch Conv. | Attribution Weight | Spend | CPA
 
-Use clean, professional formatting.
-```
+---
 
-## Requirement Specification (PDF)
+## Spend Summary Report
 
-```
-Create a requirement specification PDF:
+### Sections
+1. **Executive Summary** -- Total spend, budget utilization, pacing status.
+2. **Budget Overview** -- Allocated vs. spent vs. remaining by campaign.
+3. **Daily/Weekly Pacing** -- Burn-rate chart with projected end-of-period spend.
+4. **Efficiency Metrics** -- CPC, CPM, CPA trends over time.
+5. **Recommended Actions** -- Pacing adjustments and reallocation suggestions.
 
-REQUIREMENT SPECIFICATION
-- ID, Priority, Type, Source, Date
-
-CONTENT SPECIFICATION
-- Platform, Duration, Resolution, Script
-
-VIDEO GENERATION
-- Provider, Style, Avatar, Lip Sync
-
-UPLOAD SPECIFICATION
-- Title, Hashtags, Scheduled Time, Visibility
-
-ACCEPTANCE CRITERIA
-- Numbered list of criteria
-
-Use clean formatting with clear sections.
-```
-
-## Token Optimization Notes
-
-- Use `"latest"` version for automatic optimization
-- Batch multiple sheets/slides in a single request
-- Reuse `container.id` from previous responses to avoid reloading skills
-- Keep prompts specific to reduce iterations
-- Expected generation times: Excel ~2min, PowerPoint ~1-2min, PDF ~40-60s
+### KPI table columns
+Campaign | Budget | Spent | Remaining | Utilization % | CPC | CPM | CPA | Pacing Status

@@ -1,46 +1,46 @@
 ---
 name: generate-report
-description: >
-  Generate downloadable reports using Anthropic API Skills (xlsx, pptx, pdf).
-  Use when users want to create experiment dashboards, content calendars,
-  strategy decks, or requirement specification documents.
+description: Generates formatted marketing data science reports with standardized layouts, sections, and visualizations.
 ---
 
-# Generate Report via API Skills
+# Generate Report
 
-Generate professional documents from plugin data using Anthropic managed API Skills.
+## When to use
 
-## Report Types
+Activate when a user asks to create, draft, or format a marketing report. This skill covers report structure, content organization, and presentation -- not the API call mechanics (see `api-skills-reports` for that).
 
-| Type | Default Format | Data Source |
-|------|---------------|-------------|
-| experiment | Excel (xlsx) | ab-experiment-measurement results |
-| calendar | Excel (xlsx) | content-strategy weekly calendar |
-| strategy | PowerPoint (pptx) | Aggregated weekly metrics |
-| requirement | PDF | requirements-handoff specifications |
+## Report creation flow
 
-## Steps
+1. Determine the report purpose: executive summary, deep-dive analysis, recurring dashboard narrative, or ad-hoc investigation.
+2. Select the appropriate template from `references/report-templates.md`.
+3. Populate each section with the relevant data, metrics, and narrative.
+4. Apply formatting conventions (headings, tables, chart placeholders, callout boxes).
+5. Include an executive summary at the top with key findings and recommended actions.
 
-1. Identify the report type and data source
-2. Format the data into a clear prompt for the API Skill
-3. Call `client.beta.messages.create()` with the appropriate skill:
-   - `{"type": "anthropic", "skill_id": "xlsx", "version": "latest"}` for Excel
-   - `{"type": "anthropic", "skill_id": "pptx", "version": "latest"}` for PowerPoint
-   - `{"type": "anthropic", "skill_id": "pdf", "version": "latest"}` for PDF
-4. Include the `code_execution` tool in the request
-5. Extract and download generated files
+## Content guidelines
 
-## API Pattern
+- Lead every report with a one-paragraph executive summary stating the key takeaway.
+- Use plain language for metrics explanations; avoid jargon without defining it first.
+- Include period-over-period comparisons (WoW, MoM, YoY) where applicable.
+- Flag statistically significant changes with confidence intervals when available.
+- End with a "Recommended Actions" section containing 2-5 concrete next steps.
 
-```python
-response = client.beta.messages.create(
-    model="claude-sonnet-4-6",
-    max_tokens=4096,
-    container={"skills": [{"type": "anthropic", "skill_id": "<skill-id>", "version": "latest"}]},
-    tools=[{"type": "code_execution_20250825", "name": "code_execution"}],
-    messages=[{"role": "user", "content": "<report-prompt>"}],
-    betas=["code-execution-2025-08-25", "files-api-2025-04-14", "skills-2025-10-02"],
-)
-```
+## Formatting rules
 
-See `references/report-templates.md` for specific prompt templates per report type.
+- Use H2 headings for major sections, H3 for subsections.
+- Present KPIs in a summary table at the top of each section.
+- Mark positive trends with "up" indicators and negative trends with "down" indicators.
+- Round percentages to one decimal place; round currency to whole numbers.
+- Use consistent date formats (YYYY-MM-DD) throughout.
+
+## Visualization placeholders
+
+When the output format supports charts, include placeholders specifying:
+- Chart type (bar, line, pie, heatmap).
+- Axes and data series.
+- Title and subtitle text.
+
+## Cross-references
+
+- For report templates and section structures, see `references/report-templates.md`.
+- For API-based report file generation, see the `api-skills-reports` skill.
