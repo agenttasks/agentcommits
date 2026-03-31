@@ -1,78 +1,65 @@
 ---
 name: integration-platform
-description: |
-  Core integration platform skill managing cross-service orchestration.
-  Coordinates Higgsfield video generation with social media upload pipelines
-  and measurement data collection.
+description: >
+  Orchestrates cross-service pipelines from Higgsfield video generation through
+  social media publishing and measurement setup for platform-engineering.
 allowed-tools: Read, Write, Bash, Grep, Glob
 ---
 
-# Integration Platform
+# Orchestrate Integration Pipelines
 
-Orchestrates the end-to-end pipeline from video generation to content publishing.
+Coordinate end-to-end workflows that span video generation, content processing, upload, and measurement.
 
-## Pipeline Architecture
+## Verify Service Health
 
-```
-Requirement Received
-    │
-    ├─► Video Generation (Higgsfield MCP)
-    │       │
-    │       ├─► Generate video from script + style params
-    │       ├─► Apply camera controls and effects
-    │       ├─► Upscale if requested
-    │       └─► Output: video file + metadata
-    │
-    ├─► Content Processing
-    │       │
-    │       ├─► Validate video specs (duration, resolution, codec)
-    │       ├─► Generate platform-specific thumbnails
-    │       ├─► Prepare metadata per platform
-    │       └─► Output: platform-ready packages
-    │
-    ├─► Upload Pipeline
-    │       │
-    │       ├─► TikTok Content Posting API
-    │       ├─► Instagram Graph API (Reels)
-    │       └─► YouTube Data API v3 (Shorts)
-    │
-    └─► Measurement Setup
-            │
-            ├─► Configure analytics tracking
-            ├─► Set up webhook listeners (if available)
-            └─► Initialize experiment tracking params
-```
+At session start, confirm connectivity to all required services:
 
-## Service Health Checks
+1. Check Higgsfield MCP availability via `.mcp.json` configuration
+2. Verify TikTok API credentials are present
+3. Verify Instagram/Meta API credentials are present
+4. Verify YouTube/Google API credentials are present
 
-At session start, verify:
-```bash
-# Check Higgsfield MCP
-# Check TikTok API credentials
-# Check Instagram/Meta API credentials
-# Check YouTube/Google API credentials
-```
+Report any failures before processing requirements.
 
-## Rate Limit Management
+## Run the Pipeline
 
-| Service | Rate Limit | Strategy |
-|---------|-----------|----------|
-| Higgsfield | Varies by plan | Queue with backoff |
-| TikTok | 6 videos/day (unverified app) | Batch and schedule |
-| Instagram | 25 API calls/day (publishing) | Priority queue |
-| YouTube | 10,000 units/day | Cost-aware scheduling |
+For each accepted requirement, execute these stages in order:
 
-## Error Recovery
+### 1. Video Generation
+- Delegate to the `higgsfield-mcp` skill with script and style parameters
+- Wait for video file and metadata output
 
-- Transient failures: Retry with exponential backoff (max 3 retries)
-- Auth failures: Alert user, block requirement, log to telemetry
-- Rate limits: Queue and schedule for next available window
-- Content policy violations: Block requirement, notify marketing-data-science
+### 2. Content Processing
+- Validate video specs (duration, resolution, codec) against platform requirements
+- Generate platform-specific thumbnails
+- Prepare metadata per target platform
+
+### 3. Upload
+- Delegate to the appropriate platform skill (`tiktok-integration`, `instagram-integration`, or `youtube-integration`)
+- Respect rate limits (see `references/pipeline-architecture.md`)
+
+### 4. Measurement Setup
+- Configure analytics tracking for the published content
+- Initialize experiment tracking parameters if an experiment ID is present
+
+## Manage Rate Limits
+
+Queue work to stay within platform rate limits:
+
+- **Higgsfield** -- varies by plan; queue with backoff
+- **TikTok** -- 6 videos/day for unverified apps; batch and schedule
+- **Instagram** -- 25 publishing API calls/day; use priority queue
+- **YouTube** -- 10,000 quota units/day; cost-aware scheduling
+
+## Recover from Errors
+
+- Transient failures -- retry with exponential backoff, max 3 attempts
+- Auth failures -- alert the user, block the requirement, log to telemetry
+- Rate limit exceeded -- queue and schedule for next available window
+- Content policy violation -- block requirement, notify marketing-data-science plugin
 
 ## Configuration
 
-Platform engineering reads its config from:
+Read platform configuration from:
 - `.mcp.json` for MCP server connections
 - `.env.platform` for API credentials
-- `config/rate-limits.yaml` for rate limit overrides
-- `config/upload-defaults.yaml` for default upload parameters

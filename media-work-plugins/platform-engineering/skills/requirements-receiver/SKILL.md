@@ -1,50 +1,45 @@
 ---
 name: requirements-receiver
-description: |
-  Receives structured requirements from marketing-data-science plugin.
-  Validates, triages, and routes requirements to appropriate integration skills.
+description: >
+  Receives and triages structured requirements from marketing-data-science,
+  validates them, and routes to the appropriate platform-engineering integration skill.
 allowed-tools: Read, Write, Bash, Grep, Glob
 ---
 
-# Requirements Receiver
+# Receive and Route Requirements
 
-Monitors and processes requirements handed off from marketing-data-science.
+Read incoming requirement files from `media-work-plugins/requirements/pending/`.
 
-## Requirement Intake
+## Intake
 
-### Monitor Directory
-Watch `media-work-plugins/requirements/pending/` for new requirement files.
+1. Parse each YAML requirement file in `requirements/pending/`
+2. Validate all required fields for the requirement type (see `references/routing-rules.md`)
+3. Check that referenced resources exist (avatar IDs, platform credentials)
+4. Reject invalid requirements with a detailed error written back to the file
 
-### Validation Steps
-1. Parse YAML requirement file
-2. Validate against Pydantic Requirement model schema
-3. Check all required fields for the requirement type
-4. Verify referenced resources exist (avatar IDs, platform credentials)
+## Route by Type
 
-### Triage Logic
+Route each validated requirement to the correct skill:
 
-| Requirement Type | Route To | Priority Handling |
-|-----------------|----------|-------------------|
-| `video_generation` | higgsfield-mcp skill | P0: immediate, P1: queue, P2: batch |
-| `content_upload` | platform-specific upload skill | P0: immediate, P1: scheduled |
-| `integration_setup` | integration-platform skill | Always P1 |
-| `measurement_pipeline` | integration-platform skill | P2 unless experiment running |
+- `video_generation` -- hand off to the `higgsfield-mcp` skill
+- `content_upload` -- hand off to the platform-specific upload skill (`tiktok-integration`, `instagram-integration`, or `youtube-integration`)
+- `integration_setup` -- hand off to the `integration-platform` skill
+- `measurement_pipeline` -- hand off to the `integration-platform` skill
 
-### Acceptance Flow
-```
-1. Read requirement from pending/
-2. Validate schema and resources
-3. Move to accepted/ with timestamp
-4. Route to appropriate skill
-5. Update status as work progresses
-6. Move to completed/ when done
-```
+Respect priority: P0 requirements are processed immediately, P1 queued in order, P2 batched.
 
-## Status Updates
+## Accept and Track
 
-Write status updates back to shared requirements directory:
+1. Move the requirement file from `requirements/pending/` to `requirements/accepted/`
+2. Add an `accepted_at` ISO-8601 timestamp to the file
+3. Update status as work progresses (`in_progress`, `blocked`, `completed`)
+4. Move to `requirements/completed/` when all deliverables are confirmed
+
+## Write Status Updates
+
+Write a status block into the accepted requirement file:
+
 ```yaml
-requirement_id: "<uuid>"
 status: "accepted | in_progress | completed | blocked"
 updated_at: "<ISO-8601>"
 notes: "<progress notes>"
@@ -54,9 +49,9 @@ deliverables:
     type: "video | metadata | analytics_config"
 ```
 
-## Error Handling
+## Handle Errors
 
-- If requirement validation fails: reject with detailed error
-- If platform credentials missing: block with setup instructions
-- If Higgsfield API unavailable: block and retry with exponential backoff
-- If upload fails: block with platform-specific error details
+- Validation failure -- reject with detailed error, leave in `pending/`
+- Missing platform credentials -- block and write setup instructions into status
+- Higgsfield API unavailable -- block, note retry with exponential backoff
+- Upload failure -- block with platform-specific error details
