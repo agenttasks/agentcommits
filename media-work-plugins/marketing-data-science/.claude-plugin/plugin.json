@@ -1,7 +1,7 @@
 {
   "name": "marketing-data-science",
   "version": "0.1.0",
-  "description": "Content strategy and data science plugin for daily social media shorts from Anthropic CHANGELOG. Manages content pipelines, A/B experiments, and structured Pydantic workflows.",
+  "description": "Content strategy and data science plugin for daily social media shorts from Anthropic CHANGELOG. Manages content pipelines, A/B experiments, and cross-plugin requirements handoff.",
   "author": {
     "name": "agenttasks"
   },
@@ -14,6 +14,6 @@
     "social-media",
     "changelog",
     "ab-testing",
-    "pydantic"
+    "api-skills"
   ]
 }

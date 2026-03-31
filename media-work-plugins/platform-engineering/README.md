@@ -13,13 +13,9 @@ content upload pipelines (TikTok, Instagram, YouTube).
 | `tiktok-integration` | TikTok Content Posting API for video upload |
 | `instagram-integration` | Instagram Graph API for Reels publishing |
 | `youtube-integration` | YouTube Data API v3 for Shorts upload |
-
-## Commands
-
-| Command | Description |
-|---------|-------------|
-| `/platform-engineering:generate-video` | Generate video via Higgsfield from requirement |
-| `/platform-engineering:upload-content` | Upload video to social media platforms |
+| `api-skills-delivery` | Delivery reports via Anthropic API Skills (xlsx, pptx, pdf) |
+| `generate-video` | Generate video content using Higgsfield AI |
+| `upload-content` | Upload video to social media platforms |
 
 ## MCP Servers
 
@@ -31,7 +27,7 @@ content upload pipelines (TikTok, Instagram, YouTube).
 
 ```
 Requirement → Higgsfield Video Generation → Platform Upload → Analytics Tracking
-                                                 ↓
+                                                 |
                                     TikTok / Instagram / YouTube
 ```
 
@@ -44,4 +40,9 @@ claude plugin install platform-engineering@media-work-plugins
 
 ## Required Setup
 
-See [CONNECTORS.md](./CONNECTORS.md) for required API credentials and environment variables.
+Configure the following environment variables for platform API access:
+
+- `HIGGSFIELD_API_KEY` — Higgsfield AI
+- `TIKTOK_CLIENT_KEY`, `TIKTOK_CLIENT_SECRET`, `TIKTOK_ACCESS_TOKEN` — TikTok
+- `META_APP_ID`, `META_APP_SECRET`, `INSTAGRAM_ACCESS_TOKEN`, `INSTAGRAM_BUSINESS_ACCOUNT_ID` — Instagram
+- `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `YOUTUBE_REFRESH_TOKEN`, `YOUTUBE_CHANNEL_ID` — YouTube

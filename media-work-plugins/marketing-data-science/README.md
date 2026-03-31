@@ -14,29 +14,19 @@ Content strategy and data science plugin for creating daily social media shorts 
 | `ab-experiment-measurement` | Week-based A/B experiment framework with statistical analysis |
 | `research-account-setup` | Platform account and API setup guide |
 | `requirements-handoff` | Structured requirements handoff to platform-engineering |
-
-## Commands
-
-| Command | Description |
-|---------|-------------|
-| `/marketing-data-science:generate-content` | Generate content briefs from CHANGELOG |
-| `/marketing-data-science:run-experiment` | Create and manage A/B experiments |
-
-## Pydantic Models
-
-Version-controlled models in `models/` provide:
-- **Structured inputs**: Validated CHANGELOG entries, experiment configs
-- **Inheritance**: All models extend `BaseSessionContext` for telemetry
-- **Structured outputs**: ContentBrief, WeeklyReport, Requirement
-- **Data quality checks**: Field validators, model validators, cross-field consistency
+| `api-skills-reports` | Report generation using Anthropic API Skills (xlsx, pptx, pdf) |
+| `custom-skill-deployment` | Deploy plugin skills as Custom API Skills |
+| `generate-content` | Generate content briefs from CHANGELOG updates |
+| `run-experiment` | Create and manage A/B experiments |
+| `generate-report` | Generate downloadable reports (Excel, PowerPoint, PDF) |
 
 ## Content Pipeline
 
 ```
 CHANGELOG.md → changelog-content → content-strategy → requirements-handoff → platform-engineering
-                                         ↓
+                                         |
                                   cold-start-strategy (phase adjustment)
-                                         ↓
+                                         |
                                   ab-experiment-measurement (variant tracking)
 ```
 
