@@ -32,6 +32,15 @@ from marketing_data_science.models.requirements import (
     UploadSpec,
     VideoGenerationSpec,
 )
+from marketing_data_science.models.api_skills import (
+    generate_with_skill,
+    extract_file_ids,
+    download_all_files,
+    generate_experiment_report_xlsx,
+    generate_content_calendar_xlsx,
+    generate_strategy_deck_pptx,
+    generate_requirement_pdf,
+)
 
 __all__ = [
     "BaseSessionContext",
@@ -53,4 +62,11 @@ __all__ = [
     "RequirementType",
     "UploadSpec",
     "VideoGenerationSpec",
+    "generate_with_skill",
+    "extract_file_ids",
+    "download_all_files",
+    "generate_experiment_report_xlsx",
+    "generate_content_calendar_xlsx",
+    "generate_strategy_deck_pptx",
+    "generate_requirement_pdf",
 ]
