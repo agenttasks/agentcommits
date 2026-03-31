@@ -1,123 +1,53 @@
 ---
 name: youtube-integration
-description: |
-  YouTube Data API v3 integration for uploading Shorts content.
-  Handles OAuth, resumable uploads, metadata optimization, and analytics.
+description: >
+  Uploads Shorts content to YouTube using the Data API v3 with resumable uploads.
+  Handles Google OAuth authentication, chunked video upload, metadata optimization,
+  and analytics retrieval.
 allowed-tools: Read, Write, Bash
 ---
 
-# YouTube Integration
+# YouTube Shorts Upload
 
-Upload and manage Shorts via YouTube Data API v3.
+Upload and publish Shorts content to YouTube via the Data API v3.
 
-## API Reference
+## Steps
 
-### Authentication
-- Google OAuth 2.0
-- Scopes: `youtube.upload`, `youtube.readonly`, `youtube.force-ssl`
-- Refresh token for long-lived access
+1. Authenticate with Google OAuth 2.0
+   - Request scopes: `youtube.upload`, `youtube.readonly`, `youtube.force-ssl`
+   - Use a refresh token for long-lived access
+2. Validate the video file against YouTube Shorts requirements
+   - Confirm vertical aspect ratio (9:16) -- required for Shorts classification
+   - Confirm duration is 60 seconds or less
+   - Confirm reasonable file size (under 100 MB recommended for Shorts)
+3. Prepare metadata with Shorts optimization
+   - Include `#Shorts` in the title or description for Shorts shelf placement
+   - Set keyword-rich title (under 100 characters), description, and tags
+   - Set category to Science & Technology (ID: 28) unless otherwise specified
+4. Initialize a resumable upload via `POST /upload/youtube/v3/videos?uploadType=resumable`
+   - Include snippet, status, and contentDetails in the `part` parameter
+5. Upload the video in 5 MB chunks using the resumable upload URI
+6. Poll processing status via `GET /youtube/v3/videos?part=status&id={video-id}`
+   - Wait until `uploadStatus` is `processed`
+7. Record the `video_id` for analytics tracking
+8. Update the requirement status to completed
+
+## Platform Requirements
+
 - Base URL: `https://www.googleapis.com/youtube/v3`
+- Resolution: 1080x1920 recommended
+- Duration: up to 60 seconds for Shorts
+- Format: MP4, MOV, AVI, WMV, FLV, 3GPP, MPEG4, WebM
+- File size: max 256 GB (keep under 100 MB for Shorts)
+- Quota: 10,000 units/day; each upload costs 1,600 units (~6 uploads/day)
 
-### Shorts Upload Flow (Resumable Upload)
-
-#### Step 1: Initialize Upload
-```
-POST /upload/youtube/v3/videos?uploadType=resumable&part=snippet,status,contentDetails
-Headers:
-  Authorization: Bearer {access_token}
-  Content-Type: application/json
-  X-Upload-Content-Length: <file-size-bytes>
-  X-Upload-Content-Type: video/mp4
-Body:
-  {
-    "snippet": {
-      "title": "<title with #Shorts>",
-      "description": "<description with keywords>",
-      "tags": ["ClaudeCode", "AI", "Shorts"],
-      "categoryId": "28",
-      "defaultLanguage": "en"
-    },
-    "status": {
-      "privacyStatus": "public",
-      "selfDeclaredMadeForKids": false,
-      "publishAt": "<ISO-8601>" (for scheduled)
-    }
-  }
-Response Headers:
-  Location: <resumable-upload-uri>
-```
-
-#### Step 2: Upload Video
-```
-PUT <resumable-upload-uri>
-Headers:
-  Content-Length: <chunk-size>
-  Content-Range: bytes <start>-<end>/<total>
-  Content-Type: video/mp4
-Body: <binary video data>
-```
-
-#### Step 3: Verify Upload
-```
-GET /youtube/v3/videos?part=status&id=<video-id>
-Response: { "items": [{ "status": { "uploadStatus": "processed" } }] }
-```
-
-### Shorts-Specific Requirements
-- **Duration**: Up to 60 seconds
-- **Aspect ratio**: 9:16 (vertical) - REQUIRED for Shorts classification
-- **Title**: Include `#Shorts` in title or description for Shorts shelf placement
-- **Resolution**: 1080x1920 recommended
-- **Format**: MP4, MOV, AVI, WMV, FLV, 3GPP, MPEG4, WebM
-- **File size**: Max 256GB (but keep under 100MB for Shorts)
-
-### Quota System
-- Daily quota: 10,000 units
-- Video upload: 1,600 units per upload
-- ~6 uploads per day with default quota
-- List videos: 1 unit per call
-- Update video: 50 units per call
-
-### Analytics
-```
-GET /youtube/v3/videos?part=statistics&id=<video-id>
-Response:
-  statistics: {
-    viewCount, likeCount, commentCount, favoriteCount
-  }
-```
-
-For detailed analytics, use YouTube Analytics API:
-```
-GET /youtube/analytics/v2/reports
-Dimensions: video
-Metrics: views, estimatedMinutesWatched, averageViewDuration,
-         averageViewPercentage, likes, shares, subscribersGained
-```
-
-## Upload Workflow
-
-1. Validate video is vertical (9:16) and under 60 seconds
-2. Prepare metadata with `#Shorts` tag
-3. Initialize resumable upload
-4. Upload video in chunks (5MB chunks recommended)
-5. Poll processing status until complete
-6. Record video_id for analytics
-7. Update requirement status to completed
-
-## SEO Optimization for Shorts
-- Title: Keyword-rich, include `#Shorts`, under 100 characters
-- Description: Include timestamps, links, and keywords
-- Tags: Mix broad and specific (max 500 characters total)
-- Thumbnail: Auto-generated from video (custom thumbnails for Shorts coming)
-- Category: Science & Technology (ID: 28)
+See `references/api-details.md` for full endpoint specs, request/response schemas,
+quota costs, analytics endpoints, and error code reference.
 
 ## Error Handling
 
-| Error | Meaning | Action |
-|-------|---------|--------|
-| `quotaExceeded` | Daily quota used | Queue for next day |
-| `uploadLimitExceeded` | Too many uploads | Wait and retry |
-| `forbidden` | Auth/permission issue | Refresh credentials |
-| `videoRejected` | Policy violation | Review content, notify marketing |
-| `processingFailure` | Server-side error | Retry upload |
+- On `quotaExceeded`: queue the upload for the next day
+- On `uploadLimitExceeded`: wait and retry after the rate limit window
+- On `forbidden`: refresh credentials and verify channel permissions
+- On `videoRejected`: review content against YouTube policies, notify marketing
+- On `processingFailure`: retry the upload from the beginning
