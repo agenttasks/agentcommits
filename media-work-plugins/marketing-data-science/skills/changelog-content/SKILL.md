@@ -1,65 +1,44 @@
 ---
 name: changelog-content
-description: |
-  Parses anthropics/claude-code CHANGELOG.md to extract daily updates and transforms them
-  into social media content briefs for Instagram, TikTok, and YouTube Shorts.
-allowed-tools: Read, Grep, Glob, Bash, Write
+description: >
+  Parses the anthropics/claude-code CHANGELOG.md to extract recent updates and
+  transforms them into social media content briefs for Instagram, TikTok, and
+  YouTube Shorts. Triggered when users ask to create content from changelog entries.
 ---
 
 # CHANGELOG Content Extraction
 
-This skill reads the official `anthropics/claude-code` CHANGELOG.md and produces daily content briefs.
+Parse the official `anthropics/claude-code` CHANGELOG.md and produce daily content briefs.
 
-## Source
+## Fetch Source
 
-Fetch the latest CHANGELOG from:
-!`curl -s https://raw.githubusercontent.com/anthropics/claude-code/main/CHANGELOG.md | head -200`
+Retrieve the latest CHANGELOG from the upstream repository:
 
-## Extraction Process
-
-1. **Parse CHANGELOG** - Extract entries by date, grouping by:
-   - New features
-   - Bug fixes
-   - Breaking changes
-   - Performance improvements
-
-2. **Prioritize by Impact** - Rank entries by user impact:
-   - HIGH: New capabilities, major UX changes
-   - MEDIUM: Performance improvements, new integrations
-   - LOW: Bug fixes, minor tweaks
-
-3. **Generate Content Brief** per entry:
-
-```yaml
-changelog_date: "YYYY-MM-DD"
-headline: "<attention-grabbing 1-liner>"
-hook: "<first 3 seconds script for short-form video>"
-key_points:
-  - "<point 1>"
-  - "<point 2>"
-  - "<point 3>"
-talking_points: "<30-second script>"
-cta: "<call to action>"
-hashtags:
-  - "#ClaudeCode"
-  - "#AI"
-  - "#CodingWithAI"
-platforms:
-  instagram_reel: "<platform-specific adaptation>"
-  tiktok: "<platform-specific adaptation>"
-  youtube_short: "<platform-specific adaptation>"
+```
+https://raw.githubusercontent.com/anthropics/claude-code/main/CHANGELOG.md
 ```
 
-## Content Calendar
+Read the raw markdown and pass it to the extraction steps below.
 
-- Generate a 7-day rolling content calendar from CHANGELOG entries
+## Extract and Prioritize
+
+1. Parse entries by date, grouping into: new features, bug fixes, breaking changes, performance improvements
+2. Rank each entry by user impact:
+   - **HIGH** — New capabilities, major UX changes
+   - **MEDIUM** — Performance improvements, new integrations
+   - **LOW** — Bug fixes, minor tweaks
+3. Generate a content brief for each high or medium impact entry using the schema in `references/content-brief-schema.md`
+
+## Build Content Calendar
+
+- Produce a 7-day rolling content calendar from extracted entries
 - Map entries to optimal posting times per platform
-- Ensure no duplicate coverage across platforms on same day
-- Stagger platform posts: TikTok (morning) -> Instagram (midday) -> YouTube (evening)
+- Prevent duplicate coverage across platforms on the same day
+- Stagger platform posts: TikTok (morning), Instagram (midday), YouTube (evening)
 
 ## Quality Gates
 
-- Every brief must include a hook under 3 seconds read time
-- Scripts must be under 60 seconds for Shorts/Reels/TikToks
-- All technical claims must be traceable to a specific CHANGELOG entry
-- Include source commit/PR reference for accuracy
+- Verify every brief includes a hook under 3 seconds read time
+- Confirm scripts are under 60 seconds for Shorts, Reels, and TikToks
+- Trace all technical claims to a specific CHANGELOG entry
+- Include source commit or PR reference for accuracy
