@@ -9,6 +9,16 @@ This repository defines the **Agent Commits** specification — a standard for h
 
 See `docs/CLAUDE.md` and `skills-ref/CLAUDE.md` for subdirectory-specific guidance.
 
+## Product Management
+
+This project uses a product management skill for roadmap tracking. Available commands:
+
+- `/roadmap` — View the roadmap (tracking issue #4 and sub-issues)
+- `/triage` — Review open issues, identify blockers and priorities
+- `/plan-sprint` — Plan the next batch of work items
+
+All work is tracked through GitHub issues. Each PR maps to one conventional commit type and one scope (see issue #4 for scoping rules).
+
 ## Commit Conventions
 
 This project uses [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/). All commit messages must follow the format:
