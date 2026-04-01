@@ -1,0 +1,117 @@
+---
+title: "What are agent commits?"
+description: "Agent Commits is a lightweight standard for declaring commit conventions that AI agents can discover and follow."
+---
+
+At its core, Agent Commits is a file format: a `COMMIT.md` file containing metadata and instructions that tell agents how to format commit messages for a project. The format builds on [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/) and adds agent-specific concerns like attribution, commit splitting, and scope conventions.
+
+```markdown COMMIT.md
+---
+name: my-project
+spec: agent-commits/1.0
+types: [feat, fix, docs, chore, refactor, test]
+scopes: [api, cli, docs]
+attribution:
+  require-agent-footer: true
+---
+
+# Commit Conventions
+
+Keep subject lines under 72 characters. Use imperative mood.
+Scope is required for changes within a specific package.
+
+## Examples
+
+- `feat(api): add pagination to list endpoints`
+- `fix(cli): handle spaces in file paths`
+- `docs: update installation guide`
+```
+
+## How agent commits work
+
+Agent Commits use a simple two-step process:
+
+1. **Discovery**: When an agent starts working in a repository, it looks for a `COMMIT.md` file in standard locations (`.agents/commits/COMMIT.md` or the project root). The frontmatter declares the project's commit conventions.
+
+2. **Application**: When the agent makes a commit, it follows the conventions declared in the `COMMIT.md` — using the allowed types and scopes, formatting the message correctly, and adding attribution footers.
+
+This keeps configuration portable and tool-agnostic. The same `COMMIT.md` works whether the agent is Claude Code, Cursor, GitHub Copilot, or any other tool that supports the spec.
+
+## The commit message format
+
+Agent Commits extends the Conventional Commits format with optional agent attribution:
+
+```
+<type>(<scope>): <description>
+
+[optional body]
+
+[optional footer(s)]
+Agent: <agent-name>
+Co-Authored-By: <agent> <email>
+```
+
+The base format follows Conventional Commits exactly:
+
+- **`type`**: The kind of change (`feat`, `fix`, `docs`, etc.)
+- **`scope`**: The area of the codebase affected (optional unless the project requires it)
+- **`description`**: A short summary in imperative mood
+- **`body`**: Additional context about the change
+- **`footers`**: Metadata like `BREAKING CHANGE:`, `Refs:`, or agent attribution
+
+### Agent-specific footers
+
+Agent Commits introduces standardized footers for attribution:
+
+| Footer | Purpose | Example |
+|--------|---------|---------|
+| `Agent` | Which agent made the commit | `Agent: claude-code` |
+| `Co-Authored-By` | Credit the agent alongside the human | `Co-Authored-By: Claude <noreply@anthropic.com>` |
+| `Session` | Link to the agent session for traceability | `Session: https://claude.ai/code/session_abc123` |
+
+These footers are optional by default but projects can require them via the `attribution` frontmatter field.
+
+## The COMMIT.md file
+
+Every project that adopts Agent Commits includes a `COMMIT.md` file with YAML frontmatter and Markdown instructions:
+
+- **Frontmatter** declares machine-readable conventions: allowed types, scopes, attribution requirements
+- **Body** contains human/agent-readable instructions: project-specific guidelines, examples, edge cases
+
+This format has key advantages:
+
+- **Self-documenting**: Anyone (human or agent) can read the file and understand the conventions.
+- **Extensible**: From minimal (just `name` and `spec`) to comprehensive (types, scopes, attribution, custom rules).
+- **Portable**: Just a file — easy to version, copy, and share across projects.
+- **Tool-agnostic**: No dependency on any specific agent, linter, or CI tool.
+
+## Relationship to Conventional Commits
+
+Agent Commits is a **superset** of Conventional Commits 1.0.0. Every valid conventional commit is a valid agent commit. The spec adds:
+
+1. A **configuration file** (`COMMIT.md`) for declaring project conventions
+2. **Agent attribution** footers for traceability
+3. **Commit splitting** guidelines for agent-generated changes
+4. **Discovery** conventions so agents know where to find the configuration
+
+Projects that already use Conventional Commits can adopt Agent Commits incrementally by adding a `COMMIT.md` file.
+
+## Relationship to existing tooling
+
+Agent Commits is designed to work with the conventional commits ecosystem:
+
+| Tool | How it fits |
+|------|-------------|
+| [commitlint](https://commitlint.js.org/) | Validates commit messages match the format |
+| [release-please](https://github.com/googleapis/release-please) | Generates changelogs and version bumps from commit types |
+| [pre-commit](https://pre-commit.com/) | Runs commit message validation as a git hook |
+| [conventional-changelog](https://github.com/conventional-changelog/conventional-changelog) | Generates changelogs from commit history |
+
+The `COMMIT.md` frontmatter can express the same rules these tools enforce, giving agents native access to project conventions without parsing tool-specific config files.
+
+## Next steps
+
+- [View the specification](/specification) to understand the full `COMMIT.md` format.
+- [Follow the quickstart](/commit-creation/quickstart) to add a `COMMIT.md` to your project.
+- [Read best practices](/commit-creation/best-practices) for writing effective agent commit messages.
+- [Add agent commits support](/client-implementation/adding-agent-commits-support) to your agent or tool.

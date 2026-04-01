@@ -1,56 +1,64 @@
 ---
 title: "Specification"
-description: "The complete format specification for Agent Skills."
+description: "The complete format specification for Agent Commits."
 ---
 
-## Directory structure
+## File location
 
-A skill is a directory containing, at minimum, a `SKILL.md` file:
+A project declares its commit conventions by placing a `COMMIT.md` file in one of these locations, checked in order:
 
-```
-skill-name/
-├── SKILL.md          # Required: metadata + instructions
-├── scripts/          # Optional: executable code
-├── references/       # Optional: documentation
-├── assets/           # Optional: templates, resources
-└── ...               # Any additional files or directories
-```
+1. `.agents/commits/COMMIT.md`
+2. `COMMIT.md` (project root)
 
-## `SKILL.md` format
+Agents MUST check these locations in order and use the first file found. If no `COMMIT.md` exists, agents SHOULD fall back to [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/) defaults.
 
-The `SKILL.md` file must contain YAML frontmatter followed by Markdown content.
+## `COMMIT.md` format
+
+The `COMMIT.md` file MUST contain YAML frontmatter followed by Markdown content.
 
 ### Frontmatter
 
 | Field | Required | Constraints |
 |-------|----------|-------------|
-| `name` | Yes | Max 64 characters. Lowercase letters, numbers, and hyphens only. Must not start or end with a hyphen. |
-| `description` | Yes | Max 1024 characters. Non-empty. Describes what the skill does and when to use it. |
-| `license` | No | License name or reference to a bundled license file. |
-| `compatibility` | No | Max 500 characters. Indicates environment requirements (intended product, system packages, network access, etc.). |
+| `name` | Yes | Max 64 characters. The project or repository name. |
+| `spec` | Yes | The spec version. Must be `agent-commits/1.0`. |
+| `types` | No | List of allowed commit types. Defaults to the [Conventional Commits set](#default-types). |
+| `scopes` | No | List of allowed scopes. If omitted, any scope is allowed. |
+| `scope-required` | No | Boolean. If `true`, commits MUST include a scope. Defaults to `false`. |
+| `attribution` | No | Agent attribution requirements. See [attribution](#attribution-field). |
+| `breaking-changes` | No | Breaking change policy. See [breaking changes](#breaking-changes-field). |
+| `description-max-length` | No | Maximum length for the subject line. Defaults to `72`. |
 | `metadata` | No | Arbitrary key-value mapping for additional metadata. |
-| `allowed-tools` | No | Space-delimited list of pre-approved tools the skill may use. (Experimental) |
 
 <Card>
 **Minimal example:**
 
-```markdown SKILL.md
+```markdown COMMIT.md
 ---
-name: skill-name
-description: A description of what this skill does and when to use it.
+name: my-project
+spec: agent-commits/1.0
 ---
 ```
 
-**Example with optional fields:**
+**Example with all fields:**
 
-```markdown SKILL.md
+```markdown COMMIT.md
 ---
-name: pdf-processing
-description: Extract PDF text, fill forms, merge files. Use when handling PDFs.
-license: Apache-2.0
+name: my-project
+spec: agent-commits/1.0
+types: [feat, fix, docs, chore, refactor, test, ci, build, perf, style, revert]
+scopes: [api, cli, docs, config]
+scope-required: false
+description-max-length: 72
+attribution:
+  require-agent-footer: true
+  require-co-authored-by: false
+  require-session: false
+breaking-changes:
+  require-footer: true
 metadata:
-  author: example-org
-  version: "1.0"
+  maintainer: example-org
+  changelog-tool: release-please
 ---
 ```
 </Card>
@@ -58,188 +66,193 @@ metadata:
 #### `name` field
 
 The required `name` field:
-- Must be 1-64 characters
-- May only contain unicode lowercase alphanumeric characters (`a-z`) and hyphens (`-`)
-- Must not start or end with a hyphen (`-`)
-- Must not contain consecutive hyphens (`--`)
-- Must match the parent directory name
+- Must be 1–64 characters
+- Identifies the project for tooling and validation
+- Typically matches the repository name
 
-<Card>
-**Valid examples:**
-```yaml
-name: pdf-processing
-```
-```yaml
-name: data-analysis
-```
-```yaml
-name: code-review
-```
+#### `spec` field
 
-**Invalid examples:**
-```yaml
-name: PDF-Processing  # uppercase not allowed
-```
-```yaml
-name: -pdf  # cannot start with hyphen
-```
-```yaml
-name: pdf--processing  # consecutive hyphens not allowed
-```
-</Card>
+The required `spec` field:
+- Must be `agent-commits/1.0` for this version of the specification
+- Agents MUST check this field and warn if the version is unrecognized
 
-#### `description` field
+#### `types` field
 
-The required `description` field:
-- Must be 1-1024 characters
-- Should describe both what the skill does and when to use it
-- Should include specific keywords that help agents identify relevant tasks
-
-<Card>
-**Good example:**
-```yaml
-description: Extracts text and tables from PDF files, fills PDF forms, and merges multiple PDFs. Use when working with PDF documents or when the user mentions PDFs, forms, or document extraction.
-```
-
-**Poor example:**
-```yaml
-description: Helps with PDFs.
-```
-</Card>
-
-#### `license` field
-
-The optional `license` field:
-- Specifies the license applied to the skill
-- We recommend keeping it short (either the name of a license or the name of a bundled license file)
+The optional `types` field:
+- A list of allowed commit type prefixes
+- If omitted, defaults to the [full Conventional Commits set](#default-types)
+- Agents MUST reject commits with types not in this list
 
 <Card>
 **Example:**
 ```yaml
-license: Proprietary. LICENSE.txt has complete terms
+types: [feat, fix, docs, chore, test]
 ```
 </Card>
 
-#### `compatibility` field
+##### Default types
 
-The optional `compatibility` field:
-- Must be 1-500 characters if provided
-- Should only be included if your skill has specific environment requirements
-- Can indicate intended product, required system packages, network access needs, etc.
+When `types` is omitted, the following types are allowed (based on `@commitlint/config-conventional`):
+
+| Type | Description |
+|------|-------------|
+| `feat` | A new feature (correlates with SemVer MINOR) |
+| `fix` | A bug fix (correlates with SemVer PATCH) |
+| `docs` | Documentation changes only |
+| `style` | Formatting, whitespace, semicolons — no code change |
+| `refactor` | Code change that neither fixes a bug nor adds a feature |
+| `perf` | Performance improvement |
+| `test` | Adding or updating tests |
+| `build` | Build system or external dependency changes |
+| `ci` | CI/CD configuration changes |
+| `chore` | Maintenance tasks that don't modify source or tests |
+| `revert` | Reverts a previous commit |
+
+#### `scopes` field
+
+The optional `scopes` field:
+- A list of allowed scope values
+- If omitted, any scope is allowed (including no scope)
+- Agents MUST reject commits with scopes not in this list when the field is present
 
 <Card>
-**Examples:**
+**Example:**
 ```yaml
-compatibility: Designed for Claude Code (or similar products)
-```
-```yaml
-compatibility: Requires git, docker, jq, and access to the internet
-```
-```yaml
-compatibility: Requires Python 3.14+ and uv
+scopes: [api, cli, docs, config]
 ```
 </Card>
 
-<Note>
-Most skills do not need the `compatibility` field.
-</Note>
+#### `scope-required` field
+
+The optional `scope-required` field:
+- Boolean, defaults to `false`
+- When `true`, agents MUST include a scope in every commit message
+
+#### `attribution` field
+
+The optional `attribution` field controls agent attribution requirements:
+
+| Sub-field | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `require-agent-footer` | Boolean | `false` | Require an `Agent:` footer identifying the agent |
+| `require-co-authored-by` | Boolean | `false` | Require a `Co-Authored-By:` header for the agent |
+| `require-session` | Boolean | `false` | Require a `Session:` footer linking to the agent session |
+
+<Card>
+**Example:**
+```yaml
+attribution:
+  require-agent-footer: true
+  require-co-authored-by: true
+```
+
+Produces commits like:
+```
+feat(api): add user endpoint
+
+Implement GET /users/:id with pagination support.
+
+Agent: claude-code
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+</Card>
+
+#### `breaking-changes` field
+
+The optional `breaking-changes` field:
+
+| Sub-field | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `require-footer` | Boolean | `false` | Require a `BREAKING CHANGE:` footer (not just `!` suffix) |
+
+When `require-footer` is `true`, agents MUST include a `BREAKING CHANGE:` footer for any breaking change, even if `!` is also used in the type/scope prefix.
+
+#### `description-max-length` field
+
+The optional `description-max-length` field:
+- Integer, defaults to `72`
+- Maximum character length for the commit subject line (after the `type(scope): ` prefix)
+- Agents SHOULD wrap the commit body at this length as well
 
 #### `metadata` field
 
 The optional `metadata` field:
 - A map from string keys to string values
-- Clients can use this to store additional properties not defined by the Agent Skills spec
-- We recommend making your key names reasonably unique to avoid accidental conflicts
-
-<Card>
-**Example:**
-```yaml
-metadata:
-  author: example-org
-  version: "1.0"
-```
-</Card>
-
-#### `allowed-tools` field
-
-The optional `allowed-tools` field:
-- A space-delimited list of tools that are pre-approved to run
-- Experimental. Support for this field may vary between agent implementations
-
-<Card>
-**Example:**
-```yaml
-allowed-tools: Bash(git:*) Bash(jq:*) Read
-```
-</Card>
+- Agents and tooling can use this for additional configuration not defined by the spec
+- Use reasonably unique key names to avoid conflicts
 
 ### Body content
 
-The Markdown body after the frontmatter contains the skill instructions. There are no format restrictions. Write whatever helps agents perform the task effectively.
+The Markdown body after the frontmatter contains instructions for agents. There are no format restrictions — write whatever helps agents produce better commits for your project.
 
 Recommended sections:
-- Step-by-step instructions
-- Examples of inputs and outputs
-- Common edge cases
+- Project-specific conventions and style preferences
+- Examples of good and bad commit messages
+- Common scopes and when to use them
+- Guidance on when to split changes into multiple commits
 
-Note that the agent will load this entire file once it's decided to activate a skill. Consider splitting longer `SKILL.md` content into referenced files.
+## Commit message format
 
-## Optional directories
+Agent Commits extends the [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/) message format. All rules from that specification apply. This section describes agent-specific extensions.
 
-### `scripts/`
+### Agent attribution footers
 
-Contains executable code that agents can run. Scripts should:
-- Be self-contained or clearly document dependencies
-- Include helpful error messages
-- Handle edge cases gracefully
+Agent Commits defines three optional footers for agent attribution:
 
-Supported languages depend on the agent implementation. Common options include Python, Bash, and JavaScript.
+```
+<type>(<scope>): <description>
 
-### `references/`
+<body>
 
-Contains additional documentation that agents can read when needed:
-- `REFERENCE.md` - Detailed technical reference
-- `FORMS.md` - Form templates or structured data formats
-- Domain-specific files (`finance.md`, `legal.md`, etc.)
-
-Keep individual [reference files](#file-references) focused. Agents load these on demand, so smaller files mean less use of context.
-
-### `assets/`
-
-Contains static resources:
-- Templates (document templates, configuration templates)
-- Images (diagrams, examples)
-- Data files (lookup tables, schemas)
-
-## Progressive disclosure
-
-Skills should be structured for efficient use of context:
-
-1. **Metadata** (~100 tokens): The `name` and `description` fields are loaded at startup for all skills
-2. **Instructions** (< 5000 tokens recommended): The full `SKILL.md` body is loaded when the skill is activated
-3. **Resources** (as needed): Files (e.g. those in `scripts/`, `references/`, or `assets/`) are loaded only when required
-
-Keep your main `SKILL.md` under 500 lines. Move detailed reference material to separate files.
-
-## File references
-
-When referencing other files in your skill, use relative paths from the skill root:
-
-```markdown SKILL.md
-See [the reference guide](references/REFERENCE.md) for details.
-
-Run the extraction script:
-scripts/extract.py
+Agent: <agent-identifier>
+Co-Authored-By: <agent-name> <agent-email>
+Session: <session-url>
 ```
 
-Keep file references one level deep from `SKILL.md`. Avoid deeply nested reference chains.
+#### `Agent` footer
+
+Identifies which agent produced the commit:
+- Value MUST be a lowercase identifier (e.g., `claude-code`, `cursor`, `github-copilot`, `aider`)
+- Projects MAY require this footer via `attribution.require-agent-footer`
+
+#### `Co-Authored-By` footer
+
+Credits the agent as a co-author using the standard git trailer format:
+- Value MUST follow `Name <email>` format
+- This footer is recognized by GitHub, GitLab, and other platforms for attribution
+- Projects MAY require this footer via `attribution.require-co-authored-by`
+
+#### `Session` footer
+
+Links to the agent session for traceability:
+- Value SHOULD be a URL pointing to the session where the commit was produced
+- Projects MAY require this footer via `attribution.require-session`
+
+### Commit splitting
+
+When an agent makes changes that span multiple logical units, it SHOULD split the work into separate commits. Each commit should represent one coherent change.
+
+Guidelines for agents:
+- One bug fix per commit, even if you fixed multiple bugs in a session
+- Separate feature additions from refactoring
+- Separate formatting/style changes from logic changes
+- Group related test additions with the feature or fix they test
+- Infrastructure changes (CI, build, config) should be their own commits
 
 ## Validation
 
-Use the [skills-ref](https://github.com/agentskills/agentskills/tree/main/skills-ref) reference library to validate your skills:
+A valid `COMMIT.md` file:
+1. Contains valid YAML frontmatter delimited by `---`
+2. Has a `name` field (1–64 characters)
+3. Has a `spec` field set to `agent-commits/1.0`
+4. Has only recognized fields in the frontmatter (unknown fields trigger a warning)
+5. Has valid values for all fields that are present
 
-```bash
-skills-ref validate ./my-skill
-```
-
-This checks that your `SKILL.md` frontmatter is valid and follows all naming conventions.
+A valid agent commit message:
+1. Follows the [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/) specification
+2. Uses a type listed in the `types` field (or the default set)
+3. Uses a scope listed in the `scopes` field (if the field is present)
+4. Includes a scope (if `scope-required` is `true`)
+5. Keeps the description under `description-max-length` characters
+6. Includes required attribution footers (if configured)
+7. Includes a `BREAKING CHANGE:` footer for breaking changes (if `breaking-changes.require-footer` is `true`)

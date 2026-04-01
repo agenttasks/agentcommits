@@ -1,77 +1,53 @@
 ---
 title: "Overview"
-description: "A simple, open format for giving agents new capabilities and expertise."
+description: "A standard for how AI agents format, attribute, and structure commit messages."
 ---
 
-import { LogoCarousel } from '/snippets/LogoCarousel.jsx';
+Agent Commits defines a lightweight file format (`COMMIT.md`) that tells AI agents how a project wants commits formatted. It extends [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/) with agent-specific concerns — attribution, commit splitting, and per-project configuration.
 
-Agent Skills are folders of instructions, scripts, and resources that agents can discover and use to do things more accurately and efficiently.
+## Why Agent Commits?
 
-## Why Agent Skills?
+AI agents are writing more code and making more commits, but every agent handles commit messages differently. Projects have no standard way to tell agents their commit conventions. Agent Commits solves this with a single file that any agent can read.
 
-Agents are increasingly capable, but often don't have the context they need to do real work reliably. Skills solve this by giving agents access to procedural knowledge and company-, team-, and user-specific context they can load on demand. Agents with access to a set of skills can extend their capabilities based on the task they're working on.
+**For project maintainers**: Declare your commit conventions once and have every agent follow them — no tool-specific configuration needed.
 
-**For skill authors**: Build capabilities once and deploy them across multiple agent products.
+**For agent developers**: Support for Agent Commits lets your agent produce commits that match project expectations out of the box.
 
-**For compatible agents**: Support for skills lets end users give agents new capabilities out of the box.
+**For teams and enterprises**: Enforce consistent commit attribution, structured changelogs, and automated versioning across agent-generated code.
 
-**For teams and enterprises**: Capture organizational knowledge in portable, version-controlled packages.
+## What does Agent Commits enable?
 
-## What can Agent Skills enable?
-
-- **Domain expertise**: Package specialized knowledge into reusable instructions, from legal review processes to data analysis pipelines.
-- **New capabilities**: Give agents new capabilities (e.g. creating presentations, building MCP servers, analyzing datasets).
-- **Repeatable workflows**: Turn multi-step tasks into consistent and auditable workflows.
-- **Interoperability**: Reuse the same skill across different skills-compatible agent products.
-
-## Adoption
-
-Agent Skills are supported by leading AI development tools.
-
-<LogoCarousel />
+- **Consistent formatting**: Agents follow project-specific commit conventions (types, scopes, description style) without per-agent configuration.
+- **Agent attribution**: Standardized footers identify which agent, model, and human were involved in each commit.
+- **Automated tooling**: Conventional commit format enables release-please, semantic versioning, and changelog generation.
+- **Interoperability**: The same `COMMIT.md` works across Claude Code, Cursor, GitHub Copilot, and any agent that supports the spec.
 
 ## Open development
 
-The Agent Skills format was originally developed by [Anthropic](https://www.anthropic.com/), released as an open standard, and has been adopted by a growing number of agent products. The standard is open to contributions from the broader ecosystem.
-
-Come join the discussion on [GitHub](https://github.com/agentskills/agentskills) or [Discord](https://discord.gg/MKPE9g8aUy)!
+The Agent Commits specification was developed by [Anthropic](https://www.anthropic.com/) and released as an open standard. The format builds on the widely-adopted [Conventional Commits](https://www.conventionalcommits.org/) specification and is inspired by the [Agent Skills](https://agentskills.io) format.
 
 ## Get started
 
 <CardGroup cols={3}>
   <Card
-    title="What are skills?"
+    title="What are agent commits?"
     icon="lightbulb"
-    href="/what-are-skills"
+    href="/what-are-agent-commits"
   >
-    Learn about skills, how they work, and why they matter.
+    Learn about the format, how it works, and why it matters.
   </Card>
   <Card
     title="Specification"
     icon="file-code"
     href="/specification"
   >
-    The complete format specification for SKILL.md files.
+    The complete COMMIT.md format specification.
   </Card>
   <Card
-    title="Add skills support"
+    title="Add agent commits support"
     icon="gear"
-    href="/client-implementation/adding-skills-support"
+    href="/client-implementation/adding-agent-commits-support"
   >
-    Add skills support to your agent or tool.
-  </Card>
-  <Card
-    title="Example skills"
-    icon="code"
-    href="https://github.com/anthropics/skills"
-  >
-    Browse example skills on GitHub.
-  </Card>
-  <Card
-    title="Reference library"
-    icon="wrench"
-    href="https://github.com/agentskills/agentskills/tree/main/skills-ref"
-  >
-    Validate skills and generate prompt XML.
+    Add agent commits support to your agent or tool.
   </Card>
 </CardGroup>

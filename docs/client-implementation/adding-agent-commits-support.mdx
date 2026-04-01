@@ -1,0 +1,240 @@
+---
+title: "Adding Agent Commits support"
+description: "A guide for agent developers who want their agent to discover and follow COMMIT.md conventions."
+---
+
+This guide covers how to add Agent Commits support to an AI coding agent or tool. By the end, your agent will be able to discover `COMMIT.md` files, parse their conventions, and produce compliant commit messages.
+
+## Overview
+
+Supporting Agent Commits involves four steps:
+
+1. **Discover** the `COMMIT.md` file in the repository
+2. **Parse** the YAML frontmatter to extract conventions
+3. **Apply** conventions when generating commit messages
+4. **Attribute** the agent in commit footers
+
+## Step 1: Discover COMMIT.md
+
+When your agent starts working in a repository, check for a `COMMIT.md` file in these locations (in order):
+
+1. `.agents/commits/COMMIT.md`
+2. `COMMIT.md` (project root)
+
+Use the first file found. If neither exists, fall back to [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/) defaults.
+
+```python
+from pathlib import Path
+
+def discover_commit_md(repo_root: Path) -> Path | None:
+    """Find the COMMIT.md file in standard locations."""
+    candidates = [
+        repo_root / ".agents" / "commits" / "COMMIT.md",
+        repo_root / "COMMIT.md",
+    ]
+    for path in candidates:
+        if path.is_file():
+            return path
+    return None
+```
+
+<Note>
+The `.agents/commits/` path follows the convention established by [Agent Skills](https://agentskills.io), which uses `.agents/skills/` for skill discovery. This keeps agent configuration files organized under a single `.agents/` directory.
+</Note>
+
+## Step 2: Parse frontmatter
+
+Extract the YAML frontmatter from the `COMMIT.md` file. The frontmatter is delimited by `---` markers at the start of the file.
+
+```python
+import yaml
+
+def parse_commit_md(path: Path) -> tuple[dict, str]:
+    """Parse COMMIT.md into frontmatter dict and body string."""
+    content = path.read_text()
+    if not content.startswith("---"):
+        return {}, content
+
+    parts = content.split("---", 2)
+    if len(parts) < 3:
+        return {}, content
+
+    frontmatter = yaml.safe_load(parts[1]) or {}
+    body = parts[2].strip()
+    return frontmatter, body
+```
+
+### Validation
+
+After parsing, validate the frontmatter:
+
+1. **Required fields**: `name` and `spec` must be present
+2. **Spec version**: `spec` must be `agent-commits/1.0` (warn on unrecognized versions)
+3. **Types**: If `types` is present, it must be a list of strings
+4. **Scopes**: If `scopes` is present, it must be a list of strings
+5. **Attribution**: If `attribution` is present, validate sub-fields are booleans
+
+Be lenient with validation — warn on issues but still load the file when possible. A partial configuration is better than no configuration.
+
+### Defaults
+
+When optional fields are absent, use these defaults:
+
+| Field | Default |
+|-------|---------|
+| `types` | `[feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert]` |
+| `scopes` | Any scope allowed |
+| `scope-required` | `false` |
+| `description-max-length` | `72` |
+| `attribution.require-agent-footer` | `false` |
+| `attribution.require-co-authored-by` | `false` |
+| `attribution.require-session` | `false` |
+| `breaking-changes.require-footer` | `false` |
+
+## Step 3: Apply conventions
+
+When your agent generates a commit message, apply the conventions from the parsed `COMMIT.md`:
+
+### Type selection
+
+1. Look at the nature of the change (new feature, bug fix, docs, etc.)
+2. Select a type from the `types` list
+3. If the change doesn't fit any allowed type, use the closest match
+
+### Scope selection
+
+1. If `scopes` is defined, pick the scope that best matches the changed area
+2. If `scope-required` is `true`, always include a scope
+3. If the change spans multiple scopes, use the primary scope or omit it
+
+### Description formatting
+
+1. Write in imperative mood ("add", "fix", "update" — not "added", "fixed", "updated")
+2. Keep under `description-max-length` characters
+3. Don't end with a period
+4. Be specific about what changed
+
+### Body and footers
+
+1. Include a body for non-trivial changes explaining the *why*
+2. Add a `BREAKING CHANGE:` footer for breaking changes (required if `breaking-changes.require-footer` is `true`)
+3. Add attribution footers as configured (see Step 4)
+
+### Example implementation
+
+```python
+def format_commit_message(
+    type: str,
+    scope: str | None,
+    description: str,
+    body: str | None,
+    breaking: bool,
+    config: dict,
+    agent_name: str,
+    agent_email: str,
+    session_url: str | None,
+) -> str:
+    """Format a commit message following COMMIT.md conventions."""
+    # Subject line
+    bang = "!" if breaking else ""
+    scope_part = f"({scope})" if scope else ""
+    subject = f"{type}{scope_part}{bang}: {description}"
+
+    parts = [subject]
+
+    # Body
+    if body:
+        parts.append("")
+        parts.append(body)
+
+    # Footers
+    footers = []
+    if breaking and config.get("breaking-changes", {}).get("require-footer", False):
+        footers.append(f"BREAKING CHANGE: {description}")
+
+    attribution = config.get("attribution", {})
+    if attribution.get("require-agent-footer", False):
+        footers.append(f"Agent: {agent_name}")
+    if attribution.get("require-co-authored-by", False):
+        footers.append(f"Co-Authored-By: {agent_name} <{agent_email}>")
+    if attribution.get("require-session", False) and session_url:
+        footers.append(f"Session: {session_url}")
+
+    if footers:
+        parts.append("")
+        parts.extend(footers)
+
+    return "\n".join(parts)
+```
+
+## Step 4: Add attribution
+
+When your agent makes a commit, include attribution footers as configured:
+
+### Agent footer
+
+```
+Agent: my-agent
+```
+
+Use a consistent, lowercase identifier for your agent. This helps project maintainers track which agents are contributing.
+
+### Co-Authored-By
+
+```
+Co-Authored-By: My Agent <agent@example.com>
+```
+
+This standard git trailer is displayed by GitHub and GitLab in the commit UI. Use a consistent name and email for your agent.
+
+### Session footer
+
+```
+Session: https://example.com/sessions/abc123
+```
+
+Link to the agent session where the commit was produced. This enables maintainers to trace back to the full context of the change.
+
+## Testing your implementation
+
+To verify your implementation:
+
+1. **Discovery**: Create a `COMMIT.md` in a test repo and verify your agent finds it
+2. **Parsing**: Test with minimal, partial, and full frontmatter configurations
+3. **Type validation**: Verify your agent only uses types from the `types` list
+4. **Scope validation**: Verify scope behavior with and without `scope-required`
+5. **Attribution**: Verify footers are added when configured
+6. **Fallback**: Verify your agent uses Conventional Commits defaults when no `COMMIT.md` exists
+
+### Test fixtures
+
+Create test `COMMIT.md` files to cover edge cases:
+
+```markdown COMMIT.md (minimal)
+---
+name: test-project
+spec: agent-commits/1.0
+---
+```
+
+```markdown COMMIT.md (strict)
+---
+name: test-project
+spec: agent-commits/1.0
+types: [feat, fix]
+scopes: [api]
+scope-required: true
+attribution:
+  require-agent-footer: true
+  require-co-authored-by: true
+  require-session: true
+breaking-changes:
+  require-footer: true
+---
+
+Always include detailed body text explaining the change.
+```
+
+```markdown COMMIT.md (no frontmatter — invalid)
+This file has no frontmatter and should trigger a parse warning.
+```
