@@ -73,6 +73,66 @@ Local preview will be available at `http://localhost:3000`.
 
 Keep PRs focused on one logical change and link any related issues.
 
+## Commit Messages
+
+This project uses [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/). All commit messages must follow this format:
+
+```
+<type>(<scope>): <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+### Allowed types
+
+| Type | Purpose |
+|------|---------|
+| `feat` | New feature |
+| `fix` | Bug fix |
+| `docs` | Documentation changes |
+| `style` | Formatting, whitespace — no code change |
+| `refactor` | Code restructuring without behavior change |
+| `perf` | Performance improvement |
+| `test` | Adding or updating tests |
+| `build` | Build system or dependency changes |
+| `ci` | CI/CD configuration changes |
+| `chore` | Maintenance tasks |
+| `revert` | Reverting a previous commit |
+
+### Scopes
+
+Use `docs` for documentation site changes, `skills-ref` for reference library changes, or omit the scope for root-level changes.
+
+### Examples
+
+```
+feat(docs): add COMMIT.md specification page
+fix(skills-ref): handle empty frontmatter gracefully
+docs: update README with project description
+chore: upgrade pre-commit hooks
+```
+
+### Breaking changes
+
+Use `!` after the type/scope and/or a `BREAKING CHANGE:` footer:
+
+```
+feat(docs)!: restructure specification navigation
+
+BREAKING CHANGE: page URLs have changed
+```
+
+### Commit message validation
+
+This repo uses [pre-commit](https://pre-commit.com/) to validate commit messages. Install the hooks after cloning:
+
+```bash
+pip install pre-commit  # or: uv add --dev pre-commit
+pre-commit install --hook-type commit-msg
+```
+
 ## AI Contributions
 
 > [!IMPORTANT]

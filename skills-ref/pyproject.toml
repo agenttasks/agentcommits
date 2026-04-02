@@ -25,6 +25,7 @@ packages = ["src/skills_ref"]
 
 [dependency-groups]
 dev = [
+    "pre-commit>=4.0",
     "pytest>=7.0",
     "ruff>=0.8.0",
 ]

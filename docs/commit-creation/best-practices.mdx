@@ -1,0 +1,173 @@
+---
+title: "Best Practices"
+description: "Guidelines for writing effective commit messages with AI agents."
+---
+
+These guidelines help both humans configuring `COMMIT.md` files and agents producing commit messages.
+
+## Writing good subject lines
+
+The subject line is the most important part of a commit message. It appears in `git log --oneline`, PR descriptions, and changelogs.
+
+### Use imperative mood
+
+Write the subject as a command — what the commit *does*, not what you *did*:
+
+<Card>
+**Good:**
+```
+feat(api): add pagination to list endpoint
+fix: prevent race condition in request handler
+docs: update installation guide for v2
+```
+
+**Bad:**
+```
+feat(api): added pagination to list endpoint
+fix: fixed the race condition bug
+docs: updated installation guide
+```
+</Card>
+
+### Keep it under 72 characters
+
+The subject line (after `type(scope): `) should fit in 72 characters. This ensures readability in terminals, git log, and GitHub's UI.
+
+If you can't describe the change concisely, the commit may be doing too much — consider splitting it.
+
+### Be specific
+
+The subject should tell a reader what changed without needing to look at the diff:
+
+<Card>
+**Good:**
+```
+fix(auth): reject expired JWT tokens in middleware
+feat(cli): add --format flag for JSON output
+```
+
+**Bad:**
+```
+fix(auth): fix bug
+feat(cli): add new feature
+```
+</Card>
+
+## When to write a body
+
+Include a body when the subject alone doesn't explain *why* the change was made or *how* it works:
+
+```
+fix(api): rate-limit password reset endpoint
+
+The endpoint was vulnerable to brute-force attacks. Add a
+rate limiter of 5 requests per minute per IP address using
+the existing Redis-backed rate limiter.
+
+Refs: #142
+```
+
+Skip the body for self-explanatory changes:
+
+```
+docs: fix typo in README
+```
+
+```
+chore: update eslint to v9
+```
+
+## Choosing the right type
+
+Pick the type that best describes the *purpose* of the change, not its mechanism:
+
+| If the change... | Use |
+|------------------|-----|
+| Adds new functionality users can use | `feat` |
+| Fixes a bug | `fix` |
+| Only changes documentation | `docs` |
+| Changes formatting/whitespace only | `style` |
+| Restructures code without changing behavior | `refactor` |
+| Improves performance | `perf` |
+| Adds or modifies tests | `test` |
+| Changes build scripts or dependencies | `build` |
+| Changes CI/CD configuration | `ci` |
+| Maintenance that doesn't fit above | `chore` |
+| Undoes a previous commit | `revert` |
+
+<Tip>
+When a commit spans multiple types, that's a signal to split it. A refactoring that also fixes a bug should be two commits: one `refactor`, one `fix`.
+</Tip>
+
+## Choosing scopes
+
+Scopes should map to meaningful boundaries in your project — packages, modules, or feature areas. Define them in your `COMMIT.md` so agents and contributors use them consistently.
+
+Good scope strategies:
+
+- **By package**: `api`, `cli`, `sdk`, `web` (for monorepos)
+- **By feature area**: `auth`, `billing`, `search` (for single-package projects)
+- **By directory**: `src`, `tests`, `docs` (for simple projects)
+
+<Note>
+Don't create too many scopes. If you have more than 10, contributors (human and agent) will struggle to pick the right one. Aim for 3–7 scopes that cover 80% of changes.
+</Note>
+
+## Atomic commits
+
+Each commit should represent **one logical change**. This makes history readable, bisection useful, and reverts safe.
+
+### For agents: when to split
+
+Agents often make several related changes in a session. Split them into separate commits when:
+
+- You fix a bug and also refactor surrounding code → one `fix`, one `refactor`
+- You add a feature and update documentation → one `feat`, one `docs`
+- You change formatting and fix a logic error → one `style`, one `fix`
+- You update multiple independent packages → one commit per package
+
+### When NOT to split
+
+Keep changes together when they form one logical unit:
+
+- A feature and its tests → single `feat` commit
+- A bug fix and the regression test → single `fix` commit
+- A migration and the code that uses it → single `feat` or `fix` commit
+
+## Breaking changes
+
+Breaking changes deserve extra care because they affect downstream consumers.
+
+### Always explain the migration path
+
+```
+feat(api)!: require authentication for public endpoints
+
+All /public/* endpoints now require a valid API key in the
+Authorization header. Previously these endpoints were
+unauthenticated.
+
+BREAKING CHANGE: Clients accessing /public/* endpoints must
+include an Authorization header. Update your API key
+configuration before upgrading.
+```
+
+### Use both `!` and the footer for visibility
+
+The `!` suffix is visible in `git log --oneline`. The `BREAKING CHANGE:` footer is parsed by release-please and changelog tools. Using both maximizes visibility:
+
+```
+feat!: drop support for Node 16
+
+BREAKING CHANGE: Minimum Node.js version is now 18 LTS.
+```
+
+## Agent attribution
+
+When configuring attribution in your `COMMIT.md`, consider what's useful for your team:
+
+- **`require-agent-footer: true`** — Useful for tracking agent-vs-human contributions in analytics
+- **`require-co-authored-by: true`** — Shows agent attribution in GitHub/GitLab UI
+- **`require-session: true`** — Enables tracing commits back to specific agent sessions for debugging
+
+For most projects, `require-agent-footer: true` alone provides good traceability without cluttering commit messages.

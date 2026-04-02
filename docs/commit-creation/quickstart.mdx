@@ -1,0 +1,119 @@
+---
+title: "Quickstart"
+description: "Add a COMMIT.md to your project in under five minutes."
+---
+
+This guide walks you through adding Agent Commits to an existing project. By the end, you'll have a `COMMIT.md` file that any compatible agent can discover and follow.
+
+## Prerequisites
+
+- A git repository
+- An AI agent that supports Agent Commits (or one you want to configure manually)
+
+## Step 1: Create a COMMIT.md file
+
+Create a `COMMIT.md` file at your project root with minimal frontmatter:
+
+```markdown COMMIT.md
+---
+name: my-project
+spec: agent-commits/1.0
+---
+
+# Commit Conventions
+
+Use conventional commit format. Keep subject lines concise and in imperative mood.
+```
+
+That's it for a minimal setup. The agent will use the default Conventional Commits types and allow any scope.
+
+## Step 2: Customize for your project
+
+Most projects benefit from specifying allowed types and scopes:
+
+```markdown COMMIT.md
+---
+name: my-project
+spec: agent-commits/1.0
+types: [feat, fix, docs, chore, refactor, test]
+scopes: [api, cli, docs]
+---
+
+# Commit Conventions
+
+Use conventional commit format. Keep subject lines under 72 characters.
+
+## Scopes
+
+- `api` — changes to the REST API (`src/api/`)
+- `cli` — changes to the CLI tool (`src/cli/`)
+- `docs` — documentation changes (`docs/`)
+
+Omit scope for root-level changes like CI config or dependency updates.
+
+## Examples
+
+- `feat(api): add pagination to list endpoint`
+- `fix(cli): handle spaces in file paths`
+- `docs: update installation guide`
+- `chore: upgrade dependencies`
+```
+
+## Step 3: Add agent attribution (optional)
+
+If you want to track which commits were made by agents:
+
+```yaml
+attribution:
+  require-agent-footer: true
+  require-co-authored-by: true
+```
+
+This produces commits like:
+
+```
+feat(api): add user search endpoint
+
+Implement full-text search on the users collection with
+pagination and filtering support.
+
+Agent: claude-code
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+
+## Step 4: Test with an agent
+
+Open your project in an agent that supports Agent Commits (or one configured to read `COMMIT.md`). Ask it to make a change and commit. Verify the commit message follows your conventions.
+
+For agents that don't natively support Agent Commits yet, you can reference the `COMMIT.md` in your agent's configuration:
+- **Claude Code**: The agent reads `COMMIT.md` automatically when present, or you can reference it in your `CLAUDE.md`
+- **Other agents**: Add a note in your agent's project config to read `COMMIT.md` before committing
+
+## Step 5: Add commit message validation (optional)
+
+Use [pre-commit](https://pre-commit.com/) with the [conventional-pre-commit](https://github.com/compilerla/conventional-pre-commit) hook to validate commit messages:
+
+```yaml .pre-commit-config.yaml
+default_install_hook_types: [pre-commit, commit-msg]
+
+repos:
+  - repo: https://github.com/compilerla/conventional-pre-commit
+    rev: v4.4.0
+    hooks:
+      - id: conventional-pre-commit
+        stages: [commit-msg]
+        args: [feat, fix, chore, docs, refactor, test]
+```
+
+Install the hooks:
+
+```bash
+pip install pre-commit
+pre-commit install --hook-type commit-msg
+```
+
+## What's next?
+
+- Read [best practices](/commit-creation/best-practices) for writing effective agent commit messages.
+- View the full [specification](/specification) for all `COMMIT.md` fields.
+- If you build agents, see [adding agent commits support](/client-implementation/adding-agent-commits-support).
